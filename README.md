@@ -1,6 +1,6 @@
 # Musicology Portfolio
 
-Corpus: my **most-liked** vs **most-skipped** tracks on Spotify.
+Corpus: my most-liked vs most-skipped tracks on Spotify.
 
 | Track | Artist | Status |
 |---|---|---|
@@ -9,15 +9,15 @@ Corpus: my **most-liked** vs **most-skipped** tracks on Spotify.
 
 ---
 
-## Week 9 – Chromagrams, Cepstrograms, and Self-Similarity Matrices
+## Week 9: Chromagrams, Cepstrograms, and Self-Similarity Matrices
 
 ### Chromagrams
 
 ![Chromagrams](chromagrams_w09.png)
 
-**Do I Wanna Know?** shows a concentrated and stable harmonic profile throughout. The dominant pitch classes—G, F# and A—reflect the song's modal minor feel, rooted in the key of G minor. The chroma is remarkably consistent: the song barely modulates, and the guitar riff repeating over the whole track locks the chromagram into a near-static pattern.
+**Do I Wanna Know?** has a pretty stable harmonic profile throughout. G, F# and A dominate, which makes sense given the song is in G minor and the main riff barely changes. The chromagram looks almost the same from start to finish because the song really doesn't go anywhere harmonically, it just loops that riff.
 
-**Chop Suey!** is strikingly different. The chroma energy is spread more broadly across pitch classes and shifts abruptly at several points (~60 s, ~120 s, ~155 s). These transitions correspond to the song's jarring structural jumps: the drop from the heavy verse into the quiet "Father into your hands" bridge, and back again. The broad chroma spread reflects the highly distorted, drop-D guitar tuning and fast harmonic movement.
+**Chop Suey!** looks completely different. The chroma energy jumps around a lot and there are clear shifts at around 60s, 120s, and 155s. Those match the moments where the song suddenly drops into the quiet "Father into your hands" part and then back into the heavy sections. The spread across pitch classes also reflects the drop-D tuning and generally chaotic harmonic movement.
 
 ---
 
@@ -25,11 +25,9 @@ Corpus: my **most-liked** vs **most-skipped** tracks on Spotify.
 
 ![Cepstrograms](cepstrograms_w09.png)
 
-The cepstrogram shows how timbral texture (via MFCCs) changes over time.
+**Do I Wanna Know?** is fairly smooth. The low MFCCs (around mfcc_02 to mfcc_04) are steady throughout, which fits the consistent sound of the track: same guitar tone, same room, same groove the whole way through. There's a noticeable drop around 130s where the song strips back to just guitar for the outro.
 
-**Do I Wanna Know?** has a relatively smooth cepstrogram. The low-order MFCCs (mfcc_02–mfcc_04) dominate and are steady, reflecting the track's consistent timbre: clean/slightly overdriven guitar, dry room, and a steady drum groove. The dramatic drop at ~130 s visible in mfcc_02 marks the brief outro where the band strips down to guitar only.
-
-**Chop Suey!** shows violent, rapid fluctuations across all MFCC bands. Coefficients mfcc_02 and mfcc_03 spike sharply wherever the heavy distorted guitar hits, then collapse when the bridge quiets. The contrast between the loud, dense sections and the quiet vocal passages is the most prominent feature. This is exactly what you hear: the song is defined by extreme dynamic and timbral contrasts.
+**Chop Suey!** is all over the place. mfcc_02 and mfcc_03 spike hard whenever the distorted guitar comes in and then fall off during the quiet bridge. That contrast is basically the whole point of the song, it's built around those sudden drops and explosions in volume and texture, and the cepstrogram captures that clearly.
 
 ---
 
@@ -37,23 +35,23 @@ The cepstrogram shows how timbral texture (via MFCCs) changes over time.
 
 #### Do I Wanna Know?
 
-![SSM – Do I Wanna Know?](ssm_do_i_wanna_know_w09.png)
+![SSM Do I Wanna Know?](ssm_do_i_wanna_know_w09.png)
 
-Both chroma and timbre SSMs reveal a clear block-diagonal structure corresponding to the verse–chorus–verse–chorus–outro form. The **chroma SSM** shows that the verses and choruses have distinct but internally consistent pitch content—the blocks are bright (self-similar) and the off-diagonal transitions are dark. The **timbre SSM** reinforces this: the recurring sections match each other in texture. Notice how the chorus returns are visible as bright off-diagonal rectangles in the timbre matrix, confirming repeated timbral sections (same mix, same instrumentation).
+The structure is pretty clear in both matrices. The chroma SSM shows blocks along the diagonal where verses and choruses are internally consistent, and the timbre SSM backs that up: the same sections keep coming back with the same mix and instrumentation. You can see the chorus returns as bright rectangles off the diagonal.
 
 #### Chop Suey!
 
-![SSM – Chop Suey!](ssm_chop_suey_w09.png)
+![SSM Chop Suey!](ssm_chop_suey_w09.png)
 
-The **chroma SSM** for Chop Suey! shows a more fragmented structure. The song has many short, distinct sections (intro, verse, pre-chorus, chorus, bridge, solo, outro), each with different harmonic content, resulting in smaller, less uniform blocks. The **timbre SSM** makes the contrast even starker: the quiet bridge (~100–140 s) is a clearly isolated dark block—almost nothing else in the song sounds like it timbrally. This matches what you hear: the "Father into your hands" section is almost whisperer-quiet and acoustically completely different from the surrounding wall-of-sound sections.
+Much more fragmented. The song has a lot of short distinct sections (intro, verse, pre-chorus, chorus, bridge, solo, outro) and they're all harmonically and timbrally different from each other, so the blocks are small and uneven. The quiet bridge around 100-140s stands out as a dark isolated block in the timbre SSM because nothing else in the song sounds like it. That section really is acoustically in a different world from the rest.
 
-**Overall:** *Do I Wanna Know?* has clearer, more regular self-similarity structure (consistent timbral and harmonic identity across repeating sections). *Chop Suey!* has a more fragmented structure that reflects its genre—a metal track built on shock, contrast, and sudden dynamic shifts.
+Overall, *Do I Wanna Know?* has much clearer and more regular structure. *Chop Suey!* is fragmented by design, the whole song is about contrast and surprise.
 
 ---
 
 ## Code
 
-- [`compmus2026-w08.R`](compmus2026-w08.R) — Week 8 chromagram comparison
-- [`compmus2026-w09.R`](compmus2026-w09.R) — Week 9: chromagrams, cepstrograms, SSMs
-- [`compmus_audio/extract_chroma.py`](compmus_audio/extract_chroma.py) — CQT chroma extraction (librosa)
-- [`compmus_audio/extract_mfcc.py`](compmus_audio/extract_mfcc.py) — MFCC timbre extraction (librosa)
+- [`compmus2026-w09.R`](compmus2026-w09.R) - Week 9: chromagrams, cepstrograms, SSMs
+- [`compmus2026-w08.R`](compmus2026-w08.R) - Week 8 chromagram comparison
+- [`compmus_audio/extract_chroma.py`](compmus_audio/extract_chroma.py) - CQT chroma extraction (librosa)
+- [`compmus_audio/extract_mfcc.py`](compmus_audio/extract_mfcc.py) - MFCC extraction (librosa)
