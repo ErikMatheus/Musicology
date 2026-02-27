@@ -1,0 +1,5 @@
+*.wav
+my_spotify_data/
+Rplots.pdf
+.Rhistory
+.RData
