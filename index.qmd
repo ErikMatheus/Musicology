@@ -1,0 +1,480 @@
+---
+title: "Computational Musicology Portfolio"
+author: "Matheus"
+format: dashboard
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(tidyverse)
+library(compmus)
+
+# ── Chord/key templates (Krumhansl-Kessler) ─────────────────────────────────
+
+circshift <- function(v, n) {
+  if (n == 0) v else c(tail(v, n), head(v, -n))
+}
+
+#      C     C#    D     Eb    E     F     F#    G     Ab    A     Bb    B
+major_chord   <- c(1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0)
+minor_chord   <- c(1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0)
+seventh_chord <- c(1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0)
+major_key     <- c(6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88)
+minor_key     <- c(6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17)
+
+chord_templates <- tribble(
+  ~name,       ~template,
+  "Gb:7",      circshift(seventh_chord,  6),
+  "Gb:maj",    circshift(major_chord,    6),
+  "Bb:min",    circshift(minor_chord,   10),
+  "Db:maj",    circshift(major_chord,    1),
+  "F:min",     circshift(minor_chord,    5),
+  "Ab:7",      circshift(seventh_chord,  8),
+  "Ab:maj",    circshift(major_chord,    8),
+  "C:min",     circshift(minor_chord,    0),
+  "Eb:7",      circshift(seventh_chord,  3),
+  "Eb:maj",    circshift(major_chord,    3),
+  "G:min",     circshift(minor_chord,    7),
+  "Bb:7",      circshift(seventh_chord, 10),
+  "Bb:maj",    circshift(major_chord,   10),
+  "D:min",     circshift(minor_chord,    2),
+  "F:7",       circshift(seventh_chord,  5),
+  "F:maj",     circshift(major_chord,    5),
+  "A:min",     circshift(minor_chord,    9),
+  "C:7",       circshift(seventh_chord,  0),
+  "C:maj",     circshift(major_chord,    0),
+  "E:min",     circshift(minor_chord,    4),
+  "G:7",       circshift(seventh_chord,  7),
+  "G:maj",     circshift(major_chord,    7),
+  "B:min",     circshift(minor_chord,   11),
+  "D:7",       circshift(seventh_chord,  2),
+  "D:maj",     circshift(major_chord,    2),
+  "F#:min",    circshift(minor_chord,    6),
+  "A:7",       circshift(seventh_chord,  9),
+  "A:maj",     circshift(major_chord,    9),
+  "C#:min",    circshift(minor_chord,    1),
+  "E:7",       circshift(seventh_chord,  4),
+  "E:maj",     circshift(major_chord,    4),
+  "G#:min",    circshift(minor_chord,    8),
+  "B:7",       circshift(seventh_chord, 11),
+  "B:maj",     circshift(major_chord,   11),
+  "D#:min",    circshift(minor_chord,    3)
+)
+
+key_templates <- tribble(
+  ~name,       ~template,
+  "Gb:maj",    circshift(major_key,   6),
+  "Bb:min",    circshift(minor_key,  10),
+  "Db:maj",    circshift(major_key,   1),
+  "F:min",     circshift(minor_key,   5),
+  "Ab:maj",    circshift(major_key,   8),
+  "C:min",     circshift(minor_key,   0),
+  "Eb:maj",    circshift(major_key,   3),
+  "G:min",     circshift(minor_key,   7),
+  "Bb:maj",    circshift(major_key,  10),
+  "D:min",     circshift(minor_key,   2),
+  "F:maj",     circshift(major_key,   5),
+  "A:min",     circshift(minor_key,   9),
+  "C:maj",     circshift(major_key,   0),
+  "E:min",     circshift(minor_key,   4),
+  "G:maj",     circshift(major_key,   7),
+  "B:min",     circshift(minor_key,  11),
+  "D:maj",     circshift(major_key,   2),
+  "F#:min",    circshift(minor_key,   6),
+  "A:maj",     circshift(major_key,   9),
+  "C#:min",    circshift(minor_key,   1),
+  "E:maj",     circshift(major_key,   4),
+  "G#:min",    circshift(minor_key,   8),
+  "B:maj",     circshift(major_key,  11),
+  "D#:min",    circshift(minor_key,   3)
+)
+
+# ── Load data ────────────────────────────────────────────────────────────────
+diw_chroma  <- read_csv("compmus_audio/do_i_wanna_know.csv",  show_col_types = FALSE)
+chop_chroma <- read_csv("compmus_audio/chop_suey.csv",        show_col_types = FALSE)
+diw_timbre  <- read_csv("compmus_audio/do_i_wanna_know_timbre.csv", show_col_types = FALSE)
+chop_timbre <- read_csv("compmus_audio/chop_suey_timbre.csv",       show_col_types = FALSE)
+```
+
+# Corpus
+
+## Row {height=25%}
+
+### Most-liked track {.value-box icon="music-note-beamed"}
+
+**Do I Wanna Know?** — Arctic Monkeys
+285 plays · ~7% skip rate
+
+### Most-skipped track {.value-box icon="skip-forward-fill"}
+
+**Chop Suey!** — System of a Down
+100 plays · 100% skip rate
+
+## Row {height=75%}
+
+### About this corpus {width=55%}
+
+This portfolio analyses two tracks that sit at opposite ends of my Spotify listening behaviour:
+**Do I Wanna Know?** by Arctic Monkeys, which I have played 285 times and almost never skip,
+and **Chop Suey!** by System of a Down, which I consistently skip immediately.
+
+The contrast is deliberate: one track is hypnotic and repetitive (you can put it on and zone out),
+the other is confrontational and unpredictable (it demands your full attention or you bail).
+Computational features should reflect this difference clearly at every level of analysis —
+from raw pitch content to timbre to harmonic structure.
+
+### Track details {width=45%}
+
+| Feature | Do I Wanna Know? | Chop Suey! |
+|---|---|---|
+| Artist | Arctic Monkeys | System of a Down |
+| Genre | Indie rock | Nu-metal |
+| Duration | ~4:26 | ~3:29 |
+| Key | E minor / G major | D minor (drop-D) |
+| Tempo | ~85 bpm | Variable |
+| Play count | 285 | ~100 |
+| Skip rate | ~7% | 100% |
+
+# Chromagrams
+
+## Row
+
+### Do I Wanna Know? {width=50%}
+
+```{r}
+#| label: chromagram-diw
+diw_chroma |>
+  compmus_wrangle_chroma() |>
+  mutate(pitches = map(pitches, compmus_normalise, "manhattan")) |>
+  compmus_gather_chroma() |>
+  mutate(pitch_class = factor(
+    pitch_class, levels = c("C","C#","D","Eb","E","F","F#","G","Ab","A","Bb","B")
+  )) |>
+  ggplot(aes(x = start + duration / 2, width = duration, y = pitch_class, fill = value)) +
+  geom_tile() +
+  scale_fill_viridis_c(option = "magma", name = "Magnitude") +
+  scale_x_continuous(name = "Time (s)", expand = expansion(mult = 0)) +
+  labs(title = "Do I Wanna Know? — Chromagram", y = NULL) +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid = element_blank(), plot.title = element_text(face = "bold"))
+```
+
+### Chop Suey! {width=50%}
+
+```{r}
+#| label: chromagram-chop
+chop_chroma |>
+  compmus_wrangle_chroma() |>
+  mutate(pitches = map(pitches, compmus_normalise, "manhattan")) |>
+  compmus_gather_chroma() |>
+  mutate(pitch_class = factor(
+    pitch_class, levels = c("C","C#","D","Eb","E","F","F#","G","Ab","A","Bb","B")
+  )) |>
+  ggplot(aes(x = start + duration / 2, width = duration, y = pitch_class, fill = value)) +
+  geom_tile() +
+  scale_fill_viridis_c(option = "magma", name = "Magnitude") +
+  scale_x_continuous(name = "Time (s)", expand = expansion(mult = 0)) +
+  labs(title = "Chop Suey! — Chromagram", y = NULL) +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid = element_blank(), plot.title = element_text(face = "bold"))
+```
+
+## Row {height=20%}
+
+### Interpretation
+
+**Do I Wanna Know?** shows a very stable chromagram: E, G, and A dominate from start to finish,
+matching the song's signature riff which barely moves harmonically.
+**Chop Suey!** is far more energetic — chroma energy jumps between pitch classes and there
+are clear shifts at ~60 s, ~120 s, and ~155 s, corresponding to the song's abrupt dynamic drops
+and explosions. The spread of energy across pitch classes also reflects drop-D tuning and a wider harmonic vocabulary.
+
+# Cepstrograms
+
+## Row
+
+### Do I Wanna Know? {width=50%}
+
+```{r}
+#| label: cepstrogram-diw
+diw_timbre |>
+  compmus_wrangle_timbre() |>
+  mutate(timbre = map(timbre, compmus_normalise, "manhattan")) |>
+  compmus_gather_timbre() |>
+  ggplot(aes(x = start + duration / 2, width = duration, y = mfcc, fill = value)) +
+  geom_tile() +
+  scale_fill_viridis_c(option = "plasma", name = "Magnitude") +
+  scale_x_continuous(name = "Time (s)", expand = expansion(mult = 0)) +
+  labs(title = "Do I Wanna Know? — Cepstrogram", y = "MFCC coefficient") +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid = element_blank(), plot.title = element_text(face = "bold"))
+```
+
+### Chop Suey! {width=50%}
+
+```{r}
+#| label: cepstrogram-chop
+chop_timbre |>
+  compmus_wrangle_timbre() |>
+  mutate(timbre = map(timbre, compmus_normalise, "manhattan")) |>
+  compmus_gather_timbre() |>
+  ggplot(aes(x = start + duration / 2, width = duration, y = mfcc, fill = value)) +
+  geom_tile() +
+  scale_fill_viridis_c(option = "plasma", name = "Magnitude") +
+  scale_x_continuous(name = "Time (s)", expand = expansion(mult = 0)) +
+  labs(title = "Chop Suey! — Cepstrogram", y = "MFCC coefficient") +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid = element_blank(), plot.title = element_text(face = "bold"))
+```
+
+## Row {height=20%}
+
+### Interpretation
+
+**Do I Wanna Know?** is timbrally stable: low MFCCs (mfcc_02 to mfcc_04) hold steady throughout,
+reflecting a consistent guitar tone and production. There is a drop around 130 s where the song
+strips back to guitar only. **Chop Suey!** is all over the place — mfcc_02 and mfcc_03 spike
+hard during heavy sections and collapse during the quiet bridge (~100–140 s).
+That bridge is acoustically a completely different world from the rest of the song,
+and the cepstrogram captures the contrast precisely.
+
+# Structure
+
+## Row
+
+### Do I Wanna Know? — Chroma SSM {width=25%}
+
+```{r}
+#| label: ssm-diw-chroma
+diw_chroma |>
+  compmus_wrangle_chroma() |>
+  filter(row_number() %% 50L == 0L) |>
+  mutate(pitches = map(pitches, compmus_normalise, "manhattan")) |>
+  compmus_self_similarity(pitches, "manhattan") |>
+  filter(!is.na(d)) |>
+  mutate(d = d / max(d)) |>
+  ggplot(aes(
+    x = xstart + xduration / 2, width = 50 * xduration,
+    y = ystart + yduration / 2, height = 50 * yduration,
+    fill = d
+  )) +
+  geom_tile() +
+  coord_fixed() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_classic() +
+  labs(title = "Do I Wanna Know? — Chroma SSM", x = "Time (s)", y = "Time (s)") +
+  theme(plot.title = element_text(face = "bold"))
+```
+
+### Do I Wanna Know? — Timbre SSM {width=25%}
+
+```{r}
+#| label: ssm-diw-timbre
+diw_timbre |>
+  compmus_wrangle_timbre() |>
+  filter(row_number() %% 50L == 0L) |>
+  mutate(timbre = map(timbre, compmus_normalise, "euclidean")) |>
+  compmus_self_similarity(timbre, "cosine") |>
+  filter(!is.na(d)) |>
+  mutate(d = d / max(d)) |>
+  ggplot(aes(
+    x = xstart + xduration / 2, width = 50 * xduration,
+    y = ystart + yduration / 2, height = 50 * yduration,
+    fill = d
+  )) +
+  geom_tile() +
+  coord_fixed() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_classic() +
+  labs(title = "Do I Wanna Know? — Timbre SSM", x = "Time (s)", y = "Time (s)") +
+  theme(plot.title = element_text(face = "bold"))
+```
+
+### Chop Suey! — Chroma SSM {width=25%}
+
+```{r}
+#| label: ssm-chop-chroma
+chop_chroma |>
+  compmus_wrangle_chroma() |>
+  filter(row_number() %% 50L == 0L) |>
+  mutate(pitches = map(pitches, compmus_normalise, "manhattan")) |>
+  compmus_self_similarity(pitches, "manhattan") |>
+  filter(!is.na(d)) |>
+  mutate(d = d / max(d)) |>
+  ggplot(aes(
+    x = xstart + xduration / 2, width = 50 * xduration,
+    y = ystart + yduration / 2, height = 50 * yduration,
+    fill = d
+  )) +
+  geom_tile() +
+  coord_fixed() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_classic() +
+  labs(title = "Chop Suey! — Chroma SSM", x = "Time (s)", y = "Time (s)") +
+  theme(plot.title = element_text(face = "bold"))
+```
+
+### Chop Suey! — Timbre SSM {width=25%}
+
+```{r}
+#| label: ssm-chop-timbre
+chop_timbre |>
+  compmus_wrangle_timbre() |>
+  filter(row_number() %% 50L == 0L) |>
+  mutate(timbre = map(timbre, compmus_normalise, "euclidean")) |>
+  compmus_self_similarity(timbre, "cosine") |>
+  filter(!is.na(d)) |>
+  mutate(d = d / max(d)) |>
+  ggplot(aes(
+    x = xstart + xduration / 2, width = 50 * xduration,
+    y = ystart + yduration / 2, height = 50 * yduration,
+    fill = d
+  )) +
+  geom_tile() +
+  coord_fixed() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_classic() +
+  labs(title = "Chop Suey! — Timbre SSM", x = "Time (s)", y = "Time (s)") +
+  theme(plot.title = element_text(face = "bold"))
+```
+
+## Row {height=20%}
+
+### Interpretation
+
+**Do I Wanna Know?** shows clear repetitive block structure in both SSMs: diagonal blocks mark
+internally consistent verses and choruses, and bright off-diagonal rectangles confirm the same
+sections returning with the same instrumentation. **Chop Suey!** is much more fragmented —
+small, uneven blocks reflect the song's many short distinct sections.
+The quiet bridge (~100–140 s) appears as a dark isolated island in the timbre SSM because
+nothing else in the track sounds remotely like it.
+
+# Harmony
+
+## Row
+
+### Do I Wanna Know? — Keygram {width=50%}
+
+```{r}
+#| label: keygram-diw
+diw_chroma |>
+  compmus_wrangle_chroma() |>
+  filter(row_number() %% 50L == 0L) |>
+  compmus_match_pitch_template(key_templates, "euclidean", "manhattan") |>
+  ggplot(aes(
+    x = start + duration / 2, width = 50 * duration,
+    y = name, fill = d
+  )) +
+  geom_tile() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_minimal() +
+  labs(
+    title = "Do I Wanna Know? — Keygram",
+    subtitle = "Krumhansl-Kessler profiles · euclidean/manhattan",
+    x = "Time (s)", y = NULL
+  ) +
+  theme(
+    plot.title    = element_text(face = "bold"),
+    panel.grid    = element_blank()
+  )
+```
+
+### Chop Suey! — Keygram {width=50%}
+
+```{r}
+#| label: keygram-chop
+chop_chroma |>
+  compmus_wrangle_chroma() |>
+  filter(row_number() %% 50L == 0L) |>
+  compmus_match_pitch_template(key_templates, "euclidean", "manhattan") |>
+  ggplot(aes(
+    x = start + duration / 2, width = 50 * duration,
+    y = name, fill = d
+  )) +
+  geom_tile() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_minimal() +
+  labs(
+    title = "Chop Suey! — Keygram",
+    subtitle = "Krumhansl-Kessler profiles · euclidean/manhattan",
+    x = "Time (s)", y = NULL
+  ) +
+  theme(
+    plot.title    = element_text(face = "bold"),
+    panel.grid    = element_blank()
+  )
+```
+
+## Row
+
+### Do I Wanna Know? — Chordogram {width=50%}
+
+```{r}
+#| label: chordogram-diw
+diw_chroma |>
+  compmus_wrangle_chroma() |>
+  filter(row_number() %% 50L == 0L) |>
+  compmus_match_pitch_template(chord_templates, "euclidean", "manhattan") |>
+  ggplot(aes(
+    x = start + duration / 2, width = 50 * duration,
+    y = name, fill = d
+  )) +
+  geom_tile() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_minimal() +
+  labs(
+    title = "Do I Wanna Know? — Chordogram",
+    subtitle = "1-0 chord templates · euclidean/manhattan",
+    x = "Time (s)", y = NULL
+  ) +
+  theme(
+    plot.title    = element_text(face = "bold"),
+    panel.grid    = element_blank()
+  )
+```
+
+### Chop Suey! — Chordogram {width=50%}
+
+```{r}
+#| label: chordogram-chop
+chop_chroma |>
+  compmus_wrangle_chroma() |>
+  filter(row_number() %% 50L == 0L) |>
+  compmus_match_pitch_template(chord_templates, "euclidean", "manhattan") |>
+  ggplot(aes(
+    x = start + duration / 2, width = 50 * duration,
+    y = name, fill = d
+  )) +
+  geom_tile() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_minimal() +
+  labs(
+    title = "Chop Suey! — Chordogram",
+    subtitle = "1-0 chord templates · euclidean/manhattan",
+    x = "Time (s)", y = NULL
+  ) +
+  theme(
+    plot.title    = element_text(face = "bold"),
+    panel.grid    = element_blank()
+  )
+```
+
+## Row {height=25%}
+
+### Key findings
+
+**Do I Wanna Know? — key stability.** The keygram is dominated by a narrow band in the
+E minor / G major region throughout the entire song. This is exactly what you would expect:
+the track is built around a single repeating riff that cycles through Em, G, Am, and D,
+never really modulating. The chordogram reinforces this — E:min, G:maj, and A:min stand out
+persistently, corresponding to the three main chords of the riff. The harmonic vocabulary is
+deliberately minimal; the song's appeal comes from groove and timbre, not harmonic variety.
+
+**Chop Suey! — harmonic ambiguity.** The keygram is far messier. D minor is the most
+consistent presence (consistent with drop-D tuning and the song's centre of gravity), but
+competing regions light up during the bridge and outro. The chordogram shows rapid,
+erratic switching between chord areas, which matches the song's aggressive rhythmic and
+harmonic interruptions. Neither the key nor the chord estimation settles cleanly — the template
+matching algorithm is genuinely confused, and that confusion is musically accurate:
+Chop Suey! deliberately avoids the kind of tonal stability that makes pattern matching easy.
